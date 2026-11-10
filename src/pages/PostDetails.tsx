@@ -1,3 +1,5 @@
+import CommentForm from "../components/forms/commentForm";
+
 export default function PostDetails() {
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8 sm:py-12">
@@ -149,24 +151,7 @@ export default function PostDetails() {
 
                     </div>
 
-                    <form className="mt-4 flex items-start gap-3 border-t border-slate-200 pt-4" action="#" method="post">
-                        <img src="https://i.pravatar.cc/40?img=7" alt="your avatar" className="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-100 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                            <textarea
-                                name="comment"
-                                placeholder="Write a comment..."
-                                className="w-full min-h-24 px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition resize-y bg-slate-50 placeholder:text-slate-400"
-                            ></textarea>
-                            <div className="flex justify-end mt-2">
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-full shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1"
-                                >
-                                    Post
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    <CommentForm />
                 </section>
 
             </div>

@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import MyPost from "./pages/MyPost";
 import Footer from "./components/footer";
 import PostDetails from "./pages/PostDetails";
+import ProtectedRoute from "./components/protectedRoute";
 
 
 export default function App() {
@@ -14,7 +15,9 @@ export default function App() {
             <main className="w-full flex-1">
             <Routes>
                 <Route index element={<Home />}></Route>
-                <Route path="/mypost" element={<MyPost />}></Route>
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/mypost" element={<MyPost />}></Route>
+                </Route>
                 <Route path="/postdetails" element={<PostDetails />}></Route>
             </Routes>
             </main>

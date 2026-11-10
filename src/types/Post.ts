@@ -3,6 +3,6 @@ export interface Post {
     image_url: string;
     title: string;
     description: string;
-    isLike: string;
+    isLike: boolean;
     comment: string;
 }

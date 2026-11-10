@@ -1,11 +1,16 @@
 import z from "zod";
 
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_SIZE = 5 * 1024 * 1024;
+
 export const postSchema = z.object({
-    title: z.string().nonempty('Field required').min(2, 'at least 2 character').max(255, "max length 255"),
-    image_url: z.file().mime(['image/jpeg', 'image/png', 'image/webp'], "Only jpeg, png, web are accepted"),
-    description: z.string().nonempty('description required'),
-    isLike: z.boolean(),
-    comment: z.string()
+    title: z.string().trim().min(2, "At least 2 characters").max(255, "Maximum 255 characters"),
+    image_url: z
+        .instanceof(FileList, { message: "Image required" })
+        .refine((f) => f.length > 0, "Image required")
+        .refine((f) => f.length === 0 || ACCEPTED_TYPES.includes(f[0].type), "Only jpeg, png or webp accepted")
+        .refine((f) => f.length === 0 || f[0].size <= MAX_SIZE, "Image must be 5 MB or smaller"),
+    description: z.string().trim().min(1, "Description required").max(5000, "Maximum 5000 characters"),
 });
 
-export type postSchemaType = z.infer<typeof postSchema>
+export type postSchemaType = z.infer<typeof postSchema>;
