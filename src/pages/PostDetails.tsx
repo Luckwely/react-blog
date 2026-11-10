@@ -1,53 +1,83 @@
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router";
 import CommentForm from "../components/forms/commentForm";
+import { fetchPostById } from "../lib/posts";
+import { useAuth } from "../hooks/useAuth";
+import type { Post } from "../types/Post";
+
+// Sample comments for now. They will be replaced by real ones from the database.
+const SAMPLE_COMMENTS = [
+    { id: 1, name: "Lena Fischer", avatar: 5, time: "2 hours ago", text: "This resonates so much. I started taking slow walks without my phone, and it’s changed everything." },
+    { id: 2, name: "James Okonkwo", avatar: 8, time: "4 hours ago", text: "The part about “intentional pauses” is key. Even 5 minutes of doing nothing feels radical." },
+    { id: 3, name: "Sofia Rivera", avatar: 9, time: "7 hours ago", text: "Beautifully written. I’d love to read more about how to incorporate slow living in a busy city." },
+];
 
 export default function PostDetails() {
+    const { id } = useParams();
+    const { user } = useAuth();
+    const [post, setPost] = useState<Post | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!id) return;
+        let cancelled = false;
+        setLoading(true);
+        setError(null);
+
+        fetchPostById(id)
+            .then((result) => {
+                if (!cancelled) setPost(result);
+            })
+            .catch((e: { message?: string }) => {
+                if (!cancelled) setError(e.message ?? "Could not load this post");
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
+
+    if (loading && id) {
+        return <p className="mx-auto max-w-7xl p-8 text-slate-500">Loading post...</p>;
+    }
+
+    if (error || !post) {
+        return (
+            <section className="mx-auto max-w-7xl p-8">
+                <p role="alert" className="text-slate-600">
+                    {error ? `Could not load this post: ${error}` : "This post doesn't exist or was removed."}
+                </p>
+                <Link to="/" className="mt-4 inline-block font-semibold text-indigo-600 hover:text-indigo-700">
+                    ← Back to all posts
+                </Link>
+            </section>
+        );
+    }
+
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8 sm:py-12">
             <div className="grid grid-cols-1 gap-6 overflow-hidden rounded-2xl sm:p-6 lg:grid-cols-2 lg:gap-8">
 
                 <article className="min-w-0">
                     <div className="relative h-64 sm:h-72 w-full overflow-hidden bg-slate-200">
-                        <img
-                            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                            alt="Mountain lake at sunrise"
-                            className="w-full h-full object-cover"
-                        />
+                        <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
                     </div>
                     <div className="p-6 sm:p-8">
-
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
-                            The Art of Slow Living: Finding Peace in a Fast World
+                        <h1 className="break-words text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
+                            {post.title}
                         </h1>
 
-                        <div className="flex items-center gap-3 mt-4 text-sm text-slate-500">
-                            <div className="flex items-center gap-2">
-                                <img src="https://i.pravatar.cc/32?img=12" alt="author" className="w-7 h-7 rounded-full object-cover ring-2 ring-white" />
-                                <span className="font-medium text-slate-700">Maya Chen</span>
-                            </div>
-                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                            <span>March 12, 2025</span>
+                        <div className="mt-4 text-sm text-slate-500">
+                            {new Date(post.created_at).toLocaleDateString(undefined, { dateStyle: "long" })}
                         </div>
 
-                        <p className="mt-5 text-slate-600 leading-relaxed text-base sm:text-[1.05rem]">
-                            In a world that glorifies hustle and constant productivity, there’s a quiet rebellion in slowing down.
-                            Discover how embracing stillness, mindful moments, and intentional pauses can transform your daily life.
-                            This article explores practical ways to reclaim your time and attention without guilt.
+                        <p className="mt-5 whitespace-pre-line break-words text-slate-600 leading-relaxed text-base sm:text-[1.05rem]">
+                            {post.description}
                         </p>
-
-                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-                            <a href="#"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors group">
-                                <span className="text-xl group-hover:scale-110 transition-transform inline-block">♡</span>
-                                <span className="font-medium">128</span>
-                                <span className="text-sm text-slate-400 group-hover:text-rose-400">likes</span>
-                            </a>
-                            <div className="flex items-center gap-1 text-slate-500">
-                                <span className="text-lg">💬</span>
-                                <span className="text-sm font-medium">6</span>
-                                <span className="text-sm">comments</span>
-
-                            </div>
-                        </div>
                     </div>
                 </article>
 
@@ -58,103 +88,30 @@ export default function PostDetails() {
                     </h2>
 
                     <div className="mt-5 space-y-4 pr-1 lg:max-h-[32rem] lg:overflow-y-auto">
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=5" alt="Lena Fischer" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">Lena Fischer</span>
-                                    <span className="text-[11px] text-slate-400">2 hours ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">This resonates so much. I started taking slow walks without my phone, and it’s changed everything.</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
+                        {SAMPLE_COMMENTS.map((c) => (
+                            <div key={c.id} className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                                <img src={`https://i.pravatar.cc/40?img=${c.avatar}`} alt={c.name} className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-semibold text-sm text-slate-800">{c.name}</span>
+                                        <span className="text-[11px] text-slate-400">{c.time}</span>
+                                    </div>
+                                    <p className="text-sm text-slate-600 mt-0.5">{c.text}</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=8" alt="James Okonkwo" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">James Okonkwo</span>
-                                    <span className="text-[11px] text-slate-400">4 hours ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">The part about “intentional pauses” is key. Even 5 minutes of doing nothing feels radical.</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=9" alt="Sofia Rivera" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">Sofia Rivera</span>
-                                    <span className="text-[11px] text-slate-400">7 hours ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">Beautifully written. I’d love to read more about how to incorporate slow living in a busy city.</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=11" alt="David Kim" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">David Kim</span>
-                                    <span className="text-[11px] text-slate-400">9 hours ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">I’ve been trying to slow down but it’s hard. Any tips for not feeling guilty?</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=20" alt="Aisha Rahman" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">Aisha Rahman</span>
-                                    <span className="text-[11px] text-slate-400">12 hours ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">The photo alone made me exhale. Wonderful piece.</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                            <img src="https://i.pravatar.cc/40?img=15" alt="Tom Becker" className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm text-slate-800">Tom Becker</span>
-                                    <span className="text-[11px] text-slate-400">1 day ago</span>
-                                </div>
-                                <p className="text-sm text-slate-600 mt-0.5">Slow living doesn’t mean lazy – it’s about being present. Thanks for this reminder.</p>
-                                <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Like</a>
-                                    <a href="#" className="hover:text-indigo-500 font-medium">Reply</a>
-                                </div>
-                            </div>
-                        </div>
-
+                        ))}
                     </div>
 
-                    <CommentForm />
+                    {user ? (
+                        <CommentForm />
+                    ) : (
+                        <p className="mt-4 border-t border-slate-200 pt-4 text-sm text-slate-500">
+                            Log in to write a comment.
+                        </p>
+                    )}
                 </section>
 
             </div>
         </section>
-    )
+    );
 }

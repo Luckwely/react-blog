@@ -18,7 +18,7 @@ export default function App() {
                 <Route element={<ProtectedRoute />}>
                     <Route path="/mypost" element={<MyPost />}></Route>
                 </Route>
-                <Route path="/postdetails" element={<PostDetails />}></Route>
+                <Route path="/postdetails/:id" element={<PostDetails />}></Route>
             </Routes>
             </main>
             <Footer />

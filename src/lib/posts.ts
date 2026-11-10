@@ -26,3 +26,14 @@ export async function fetchPosts({ userId, page, pageSize }: FetchOptions) {
 
   return { posts: (data ?? []) as Post[], total: count ?? 0 };
 }
+
+export async function fetchPostById(id: string) {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as Post | null; // null = no post with that id
+}
