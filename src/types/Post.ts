@@ -1,8 +1,8 @@
 export interface Post {
-    id: string | number;
-    image_url: string;
+    id: string;
+    user_id: string;
     title: string;
     description: string;
-    isLike: boolean;
-    comment: string;
+    image_url: string;
+    created_at: string;
 }
