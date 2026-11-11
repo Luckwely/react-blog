@@ -1,16 +1,27 @@
 import { useState } from "react";
+import { Link } from "react-router";
+import { AiOutlineComment, AiOutlineLike } from "react-icons/ai";
+import { FaEdit, FaRegCommentDots, FaTrash } from "react-icons/fa";
 import Modal from "../components/modal";
 import PostForm from "../components/forms/postForm";
+import EditPostForm from "../components/forms/editPostForm";
+import DeletePostModal from "../components/deletePostModal";
 import Pagination from "../components/ui/pagination";
 import { usePosts } from "../hooks/usePosts";
-import { Link } from "react-router";
-import { FaEdit, FaRegCommentDots, FaTrash } from "react-icons/fa";
+import type { Post } from "../types/Post";
 
 export default function MyPost() {
   const [open, setOpen] = useState(false);
-  const { posts, loading, error, page, setPage, totalPages, reload } = usePosts(
-    { mine: true, pageSize: 5 },
-  );
+  const [editing, setEditing] = useState<Post | null>(null);
+  const [deleting, setDeleting] = useState<Post | null>(null);
+  const { posts, loading, error, page, setPage, totalPages, reload } = usePosts({ mine: true, pageSize: 5 });
+
+  const handleDeleted = () => {
+    setDeleting(null);
+    // deleted the last post of a page: go back one page
+    if (posts.length === 1 && page > 1) setPage(page - 1);
+    else reload();
+  };
 
   return (
     <div className="my-post-page min-h-screen bg-slate-50">
@@ -35,19 +46,10 @@ export default function MyPost() {
             </button>
           </div>
 
-          {loading && (
-            <p className="mt-8 text-slate-500">Loading your posts...</p>
-          )}
-          {error && (
-            <p role="alert" className="mt-8 text-red-500">
-              Could not load posts: {error}
-            </p>
-          )}
+          {loading && <p className="mt-8 text-slate-500">Loading your posts...</p>}
+          {error && <p role="alert" className="mt-8 text-red-500">Could not load posts: {error}</p>}
           {!loading && !error && posts.length === 0 && (
-            <p className="mt-8 text-slate-500">
-              You haven't published any posts yet. Click "New post" to write
-              your first one.
-            </p>
+            <p className="mt-8 text-slate-500">You haven't published any posts yet. Click "New post" to write your first one.</p>
           )}
 
           <div className="mt-8 grid grid-cols-1 gap-6">
@@ -75,25 +77,25 @@ export default function MyPost() {
                   </p>
 
                   <div className="mt-6 flex flex-col items-start justify-between gap-5 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
-                    <span className="text-sm text-slate-500">
-                      {new Date(post.created_at).toLocaleDateString(undefined, {
-                        dateStyle: "medium",
-                      })}
-                    </span>
-                    <Link
-                      to={`/postdetails/${post.id}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    >
-                      <FaRegCommentDots />
-                      View &amp; comment
-                    </Link>
+                    <div className="flex items-center gap-5 text-sm text-slate-500">
+                      <span>{new Date(post.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+                      <span className="inline-flex items-center gap-1"><AiOutlineLike /> {post.likes_count}</span>
+                      <span className="inline-flex items-center gap-1"><AiOutlineComment /> {post.comments_count}</span>
+                    </div>
 
                     <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-                      <button className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                      <Link
+                        to={`/postdetails/${post.id}`}
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      >
+                        <FaRegCommentDots />
+                        View &amp; comment
+                      </Link>
+                      <button type="button" onClick={() => setEditing(post)} className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         <FaEdit className="text-blue-500" />
                         Modify My Post
                       </button>
-                      <button className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                      <button type="button" onClick={() => setDeleting(post)} className="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
                         <FaTrash className="text-red-500" />
                         Delete My Post
                       </button>
@@ -118,6 +120,22 @@ export default function MyPost() {
             }}
           />
         </Modal>
+      )}
+
+      {editing && (
+        <Modal title="Edit post" setOpen={() => setEditing(null)}>
+          <EditPostForm
+            post={editing}
+            onSuccess={() => {
+              setEditing(null);
+              reload();
+            }}
+          />
+        </Modal>
+      )}
+
+      {deleting && (
+        <DeletePostModal post={deleting} onClose={() => setDeleting(null)} onDeleted={handleDeleted} />
       )}
     </div>
   );

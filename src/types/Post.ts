@@ -5,4 +5,6 @@ export interface Post {
     description: string;
     image_url: string;
     created_at: string;
+    likes_count: number;
+    comments_count: number;
 }

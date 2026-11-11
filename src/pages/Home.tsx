@@ -1,9 +1,13 @@
 import Title from "../components/ui/title";
 import Pagination from "../components/ui/pagination";
 import { usePosts } from "../hooks/usePosts";
+import { Link } from "react-router";
+import { AiOutlineComment, AiOutlineLike } from "react-icons/ai";
 
 export default function Home() {
-  const { posts, loading, error, page, setPage, totalPages } = usePosts({ pageSize: 8 });
+  const { posts, loading, error, page, setPage, totalPages } = usePosts({
+    pageSize: 8,
+  });
 
   return (
     <div className="home-page">
@@ -14,24 +18,48 @@ export default function Home() {
         <Title>All Blogs</Title>
 
         {loading && <p className="mt-7 text-slate-500">Loading posts...</p>}
-        {error && <p role="alert" className="mt-7 text-red-500">Could not load posts: {error}</p>}
+        {error && (
+          <p role="alert" className="mt-7 text-red-500">
+            Could not load posts: {error}
+          </p>
+        )}
         {!loading && !error && posts.length === 0 && (
-          <p className="mt-7 text-slate-500">No posts yet. Be the first to publish one!</p>
+          <p className="mt-7 text-slate-500">
+            No posts yet. Be the first to publish one!
+          </p>
         )}
 
         <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
           {posts.map((post) => (
-            <div
+            <Link
               key={post.id}
-              className="min-w-0 break-words rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg sm:p-6 [&>h1]:mb-3 [&>h1]:font-bold [&>h2]:mb-3 [&>h2]:font-bold [&>p]:leading-7 [&>p]:text-slate-500 [&>div:last-child]:mt-5 [&>div:last-child]:border-t [&>div:last-child]:border-slate-100 [&>div:last-child]:pt-4 [&>div:last-child]:text-slate-500"
+              to={`/postdetails/${post.id}`}
+              className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg sm:p-6 [&>h1]:mb-3 [&>h1]:font-bold [&>h2]:mb-3 [&>h2]:font-bold [&>p]:leading-7 [&>p]:text-slate-500 [&>div:last-child]:mt-5 [&>div:last-child]:border-t [&>div:last-child]:border-slate-100 [&>div:last-child]:pt-4 [&>div:last-child]:text-slate-500"
             >
-              <img src={post.image_url} alt={post.title} loading="lazy" className="h-40 w-full object-cover rounded-md" />
+              <img
+                src={post.image_url}
+                alt={post.title}
+                loading="lazy"
+                className="h-40 w-full object-cover rounded-md"
+              />
               <Title>{post.title}</Title>
               <p className="line-clamp-3">{post.description}</p>
-              <div className="text-sm">
-                {new Date(post.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
+              <div className="flex items-center justify-between text-sm">
+                <span>
+                  {new Date(post.created_at).toLocaleDateString(undefined, {
+                    dateStyle: "medium",
+                  })}
+                </span>
+                <span className="flex items-center gap-4">
+                  <span className="inline-flex items-center gap-1">
+                    <AiOutlineLike /> {post.likes_count}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <AiOutlineComment /> {post.comments_count}
+                  </span>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
